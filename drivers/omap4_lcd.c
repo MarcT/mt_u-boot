@@ -515,8 +515,8 @@ extern char const _binary_normalboot_rle_start[];
 extern char const _binary_normalboot_rle_end[];
 extern char const _binary_recoveryboot_rle_start[];
 extern char const _binary_recoveryboot_rle_end[];
-extern char const _binary_boot2_rle_start[];
-extern char const _binary_boot2_rle_end[];
+extern char const _binary_resetboot_rle_start[];
+extern char const _binary_resetboot_rle_end[];
 extern char const _binary_booting_rle_start[];
 extern char const _binary_booting_rle_end[];
 
@@ -655,11 +655,11 @@ void show_recovery_splash(void)
         return;
 }
 
-void show_boot2_splash(void)
+void show_resetboot_splash(void)
 {
         u_int16_t *target_addr = (u_int16_t *)framebuffer;
-        u_int16_t *start = (u_int16_t *)_binary_boot2_rle_start;
-        u_int16_t *end = (u_int16_t *)_binary_boot2_rle_end;
+        u_int16_t *start = (u_int16_t *)_binary_resetboot_rle_start;
+        u_int16_t *end = (u_int16_t *)_binary_resetboot_rle_end;
 
         /* Convert the RLE data into RGB565 */
         for (; start != end; start += 2) {

@@ -73,7 +73,7 @@ extern void do_powerdown (void);
 extern void show_splash();
 extern void show_normalboot_splash();
 extern void show_recovery_splash();
-extern void show_boot2_splash();
+extern void show_resetboot_splash();
 extern void show_booting_splash();
 
 #if (CONFIG_MMC)
@@ -1496,7 +1496,7 @@ int do_fastboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 							show_recovery_splash();
 							break;
 						case 2:
-							show_boot2_splash();
+							show_resetboot_splash();
 							break;
 						default:
 							//??? How did this happen ???
