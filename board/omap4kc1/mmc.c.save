@@ -29,7 +29,7 @@
 #include <common.h>
 #include <mmc.h>
 #include <fastboot.h>
-static int do_format(int part);
+static int do_format(void);
 
 #define EFI_VERSION 0x00010000
 #define EFI_ENTRIES 128
@@ -215,7 +215,7 @@ int load_ptbl(void)
 		printf("===============================\n");
 		printf("            format             \n");
 		printf("===============================\n");
-		do_format(0);
+		do_format();
 		return -1;
 	}
 	for (n = 0; n < (128/4); n++) {
@@ -235,7 +235,7 @@ struct partition {
 	unsigned size_kb;
 };
 
-static struct partition partitions[] = {
+static struct partition base_partitions[] = {
 	{ "-", 128 },			//GPT
 	{ "xloader", 128 },		//p1 
 	{ "bootloader", 256 },		//p2
@@ -248,23 +248,15 @@ static struct partition partitions[] = {
 	{ "system", 512*1024 },		//p9
 	{ "userdata", 1137*1024 },	//p10
 	{ "cache", 256*1024 },		//p11
+	{ 0, 0 },
+};
+
+static struct partition oem_partitions[] = {
 	{ "media", 5131*1024 },		//p12
 	{ 0, 0 },
 };
 
 static struct partition dual_partitions[] = {
-	{ "-", 128 },			//GPT
-	{ "xloader", 128 },		//p1 
-	{ "bootloader", 256 },		//p2
-	{ "dkernel", 10*1024 },		//p3
-	{ "dfs", 192*1024 },		//p4
-	{ "recovery", 16*1024 },	//p5
-	{ "backup", 64*1024 },		//p6
-	{ "boot", 10*1024 },		//p7
-	{ "splash", 5*1024 },		//p8
-	{ "system", 512*1024 },		//p9
-	{ "userdata", 1137*1024 },	//p10
-	{ "cache", 256*1024 },		//p11
 	{ "media", 3742*1024 },		//p12
 	{ "boot2", 11*1024 },		//p13
 	{ "system2", 450*1024 },	//p14
@@ -293,6 +285,18 @@ static int do_format(int part)
 	start_ptbl(ptbl, blocks);
 	n = 0;
 	next = 0;
+	for (n = 0, next = 0; base_partitions[n].name; n++) {
+		unsigned sz = base_partitions[n].size_kb * 2;
+		if (!strcmp(base_partitions[n].name,"-")) {
+			next += sz;
+			continue;
+		}
+		if (sz == 0)
+			sz = blocks - next;
+		if (add_ptn(ptbl, next, next + sz - 1, base_partitions[n].name))
+			return -1;
+		next += sz;
+	}
 	if (part == 1) {
 		for (n = 0, next = 0; dual_partitions[n].name; n++) {
 			unsigned sz = dual_partitions[n].size_kb * 2;
@@ -307,15 +311,15 @@ static int do_format(int part)
 			next += sz;
 		}
 	} else {
-		for (n = 0, next = 0; partitions[n].name; n++) {
-			unsigned sz = partitions[n].size_kb * 2;
-			if (!strcmp(partitions[n].name,"-")) {
+		for (n = 0, next = 0; oem_partitions[n].name; n++) {
+			unsigned sz = oem_partitions[n].size_kb * 2;
+			if (!strcmp(oem_partitions[n].name,"-")) {
 				next += sz;
 				continue;
 			}
 			if (sz == 0)
 				sz = blocks - next;
-			if (add_ptn(ptbl, next, next + sz - 1, partitions[n].name))
+			if (add_ptn(ptbl, next, next + sz - 1, oem_partitions[n].name))
 				return -1;
 			next += sz;
 		}

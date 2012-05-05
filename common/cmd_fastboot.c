@@ -72,6 +72,7 @@ extern void do_powerdown (void);
 
 extern void show_splash();
 extern void show_normalboot_splash();
+extern void show_altboot_splash();
 extern void show_recovery_splash();
 extern void show_resetboot_splash();
 extern void show_booting_splash();
@@ -910,6 +911,17 @@ static int rx_handler (const unsigned char *buffer, unsigned int buffer_size)
 				goto done;
 			}
 
+			/* fastboot oem dualformat */
+			if(memcmp(cmdbuf, "dualformat", 10) == 0){
+				ret = fastboot_oem(cmdbuf);
+				if (ret < 0) {
+					strcpy(response,"FAIL");
+				} else {
+					strcpy(response,"OKAY");
+				}
+				goto done;
+			}
+
 			/* fastboot oem recovery */
 			if(memcmp(cmdbuf, "recovery", 8) == 0){
 				sprintf(response,"OKAY");
@@ -1484,7 +1496,7 @@ int do_fastboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 					/* user has pressed the power button, so we start the timer (even in fastboot mode) */
 					button_press = 1;
 
-					fastboot_wait_power_button_abort = ((fastboot_wait_power_button_abort + 1) % 3);
+					fastboot_wait_power_button_abort = ((fastboot_wait_power_button_abort + 1) % 4);
 					fastboot_countdown = CFG_FASTBOOT_COUNTDOWN_RESET; //Reset the countdown (2.5 secs)
 				
 					switch (fastboot_wait_power_button_abort)
@@ -1496,6 +1508,9 @@ int do_fastboot (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 							show_recovery_splash();
 							break;
 						case 2:
+							show_altboot_splash();
+							break;
+						case 3:
 							show_resetboot_splash();
 							break;
 						default:
